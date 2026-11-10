@@ -30,6 +30,8 @@ public sealed class MainForm : Form
         BackColor = Color.FromArgb(245, 247, 251);
         Font = new Font("Segoe UI", 9.5f);
         AutoScaleMode = AutoScaleMode.Dpi;
+        KeyPreview = true;
+        KeyDown += HandleShortcuts;
         BuildInterface();
         LoadVoices();
         synthesizer.SpeakCompleted += (_, _) => BeginInvoke(() => SetStatus("Hazır", false));
@@ -82,6 +84,9 @@ public sealed class MainForm : Form
         copyResult.FlatAppearance.BorderSize = 0; copyResult.Click += CopyRecognizedText;
         var clearResult = new Button { Text = "Sonucu sil", Width = 98, Height = 34, FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(103, 116, 135), BackColor = Color.White, Cursor = Cursors.Hand, Margin = new Padding(4, 0, 0, 0) };
         clearResult.FlatAppearance.BorderSize = 0; clearResult.Click += (_, _) => ClearRecognizedText();
+        var recognitionTips = new ToolTip();
+        recognitionTips.SetToolTip(stopButton, "Kısayol: Esc");
+        recognitionTips.SetToolTip(copyResult, "Kısayol: Ctrl + Shift + C");
         speechActions.Controls.Add(listenButton); speechActions.Controls.Add(stopButton); speechActions.Controls.Add(copyResult); speechActions.Controls.Add(clearResult); speechCard.Controls.Add(speechActions, 0, 0);
         recognized.Dock = DockStyle.Fill; recognized.BorderStyle = BorderStyle.None; recognized.Font = new Font("Segoe UI", 10.5f); recognized.ForeColor = Color.FromArgb(37, 49, 68); recognized.ReadOnly = true; recognized.BackColor = Color.White; recognized.Text = "Konuşma tanıma sonucu burada görünecek.";
         speechCard.Controls.Add(recognized, 0, 1);
@@ -138,6 +143,8 @@ public sealed class MainForm : Form
         speakButton.Text = "▶  Seslendir"; StyleButton(speakButton, true); speakButton.Width = 137; speakButton.Click += Speak;
         var save = new Button { Text = "↓  Metni Kaydet", Width = 135, Height = 34, FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(67, 87, 115), BackColor = Color.FromArgb(240, 244, 249), Cursor = Cursors.Hand, Margin = new Padding(8, 0, 0, 0) }; save.FlatAppearance.BorderSize = 0; save.Click += SaveText;
         var clear = new Button { Text = "Temizle", Width = 78, Height = 34, FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(103, 116, 135), BackColor = Color.White, Cursor = Cursors.Hand, Margin = new Padding(5, 0, 0, 0) }; clear.FlatAppearance.BorderSize = 0; clear.Click += (_, _) => input.Clear();
+        var speechTips = new ToolTip();
+        speechTips.SetToolTip(speakButton, "Kısayol: Ctrl + Enter");
         actions.Controls.Add(speakButton); actions.Controls.Add(save); actions.Controls.Add(clear); card.Controls.Add(actions, 0, 0);
         var voiceRow = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = false, Padding = new Padding(0, 5, 0, 0) };
         voiceRow.Controls.Add(new Label { Text = "Ses", AutoSize = true, ForeColor = Color.FromArgb(103, 116, 135), Margin = new Padding(0, 5, 8, 0) });
@@ -189,6 +196,26 @@ public sealed class MainForm : Form
         if (string.IsNullOrWhiteSpace(input.Text)) { ShowError("Metin gerekli", "Seslendirmek için önce metin alanına bir şey yazın."); return; }
         try { synthesizer.SpeakAsyncCancelAll(); synthesizer.Rate = speed.Value; synthesizer.SpeakAsync(input.Text); SetStatus("Metin seslendiriliyor…", false); }
         catch (Exception ex) { ShowError("Seslendirme başlatılamadı", ex.Message); }
+    }
+
+    private void HandleShortcuts(object? sender, KeyEventArgs e)
+    {
+        if (e.Control && e.KeyCode == Keys.Enter)
+        {
+            Speak(this, EventArgs.Empty);
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+        }
+        else if (e.KeyCode == Keys.Escape && listening)
+        {
+            StopListening("Dinleme durduruldu.");
+            e.Handled = true;
+        }
+        else if (e.Control && e.Shift && e.KeyCode == Keys.C)
+        {
+            CopyRecognizedText(this, EventArgs.Empty);
+            e.Handled = true;
+        }
     }
 
     private void StartListening(object? sender, EventArgs e)

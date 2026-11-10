@@ -32,6 +32,7 @@ Metni sol alana yazıp **Seslendir** düğmesine basın. Ses listesinden kurulu 
 - Tanıma sonuçlarını saat damgasıyla listeleme ve geçmişi temizleme
 - Tanıma geçmişini saat bilgileriyle `.txt` dosyasına aktarma
 - Tanınan metni panoya kopyalama veya sonuç alanını temizleme
+- Klavye kısayolları: `Ctrl+Enter` ile seslendirme, `Esc` ile dinlemeyi durdurma, `Ctrl+Shift+C` ile sonucu kopyalama
 - Metni UTF-8 `.txt` dosyasına kaydetme
 - Mikrofon, dil paketi ve dosya hataları için anlaşılır bildirimler
 
