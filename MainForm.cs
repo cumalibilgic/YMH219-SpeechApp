@@ -78,7 +78,11 @@ public sealed class MainForm : Form
         var speechActions = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = false, FlowDirection = FlowDirection.LeftToRight };
         listenButton.Text = "●  Dinlemeyi Başlat"; StyleButton(listenButton, true); listenButton.Width = 176; listenButton.Click += StartListening;
         stopButton.Text = "■  Durdur"; StyleButton(stopButton, false); stopButton.Width = 105; stopButton.Enabled = false; stopButton.Click += (_, _) => StopListening("Dinleme durduruldu.");
-        speechActions.Controls.Add(listenButton); speechActions.Controls.Add(stopButton); speechCard.Controls.Add(speechActions, 0, 0);
+        var copyResult = new Button { Text = "Kopyala", Width = 90, Height = 34, FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(67, 87, 115), BackColor = Color.FromArgb(240, 244, 249), Cursor = Cursors.Hand, Margin = new Padding(8, 0, 0, 0) };
+        copyResult.FlatAppearance.BorderSize = 0; copyResult.Click += CopyRecognizedText;
+        var clearResult = new Button { Text = "Sonucu sil", Width = 98, Height = 34, FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(103, 116, 135), BackColor = Color.White, Cursor = Cursors.Hand, Margin = new Padding(4, 0, 0, 0) };
+        clearResult.FlatAppearance.BorderSize = 0; clearResult.Click += (_, _) => ClearRecognizedText();
+        speechActions.Controls.Add(listenButton); speechActions.Controls.Add(stopButton); speechActions.Controls.Add(copyResult); speechActions.Controls.Add(clearResult); speechCard.Controls.Add(speechActions, 0, 0);
         recognized.Dock = DockStyle.Fill; recognized.BorderStyle = BorderStyle.None; recognized.Font = new Font("Segoe UI", 10.5f); recognized.ForeColor = Color.FromArgb(37, 49, 68); recognized.ReadOnly = true; recognized.BackColor = Color.White; recognized.Text = "Konuşma tanıma sonucu burada görünecek.";
         speechCard.Controls.Add(recognized, 0, 1);
         right.Controls.Add(speechCard, 0, 1);
@@ -283,6 +287,32 @@ public sealed class MainForm : Form
         {
             ShowError("Geçmiş kaydedilemedi", ex.Message);
         }
+    }
+
+    private void CopyRecognizedText(object? sender, EventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(recognized.Text) || recognized.Text == "Konuşma tanıma sonucu burada görünecek.")
+        {
+            ShowError("Kopyalanacak sonuç yok", "Önce mikrofondan bir konuşma tanıyın.");
+            return;
+        }
+
+        try
+        {
+            Clipboard.SetText(recognized.Text);
+            SetStatus("Tanıma sonucu panoya kopyalandı.", false);
+        }
+        catch (Exception ex)
+        {
+            ShowError("Sonuç kopyalanamadı", ex.Message);
+        }
+    }
+
+    private void ClearRecognizedText()
+    {
+        recognized.Clear();
+        recognized.Text = "Konuşma tanıma sonucu burada görünecek.";
+        SetStatus("Sonuç alanı temizlendi.", false);
     }
 
     private void SetStatus(string text, bool error)
