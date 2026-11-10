@@ -30,6 +30,7 @@ Metni sol alana yazıp **Seslendir** düğmesine basın. Ses listesinden kurulu 
 - Mikrofon üzerinden konuşmayı metne aktarma
 - Dinleme durumunu gösterme, başlatma ve durdurma
 - Tanıma sonuçlarını saat damgasıyla listeleme ve geçmişi temizleme
+- Tanıma geçmişini saat bilgileriyle `.txt` dosyasına aktarma
 - Metni UTF-8 `.txt` dosyasına kaydetme
 - Mikrofon, dil paketi ve dosya hataları için anlaşılır bildirimler
 

@@ -87,7 +87,16 @@ public sealed class MainForm : Form
         historyCard.RowStyles.Add(new RowStyle(SizeType.Absolute, 30)); historyCard.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         var historyHeader = new Panel { Dock = DockStyle.Fill };
         historyHeader.Controls.Add(new Label { Text = "TANIMA GEÇMİŞİ", Font = new Font("Segoe UI Semibold", 9, FontStyle.Bold), ForeColor = Color.FromArgb(80, 97, 121), AutoSize = true, Location = new Point(0, 2) });
-        var clearHistory = new LinkLabel { Text = "Geçmişi temizle", AutoSize = true, Anchor = AnchorStyles.Top | AnchorStyles.Right, Location = new Point(330, 2) }; clearHistory.LinkClicked += (_, _) => history.Items.Clear(); historyHeader.Controls.Add(clearHistory);
+        var exportHistory = new LinkLabel { Text = "Dışa aktar", AutoSize = true, Anchor = AnchorStyles.Top | AnchorStyles.Right, Location = new Point(240, 2) };
+        exportHistory.LinkClicked += SaveHistory;
+        var clearHistory = new LinkLabel { Text = "Geçmişi temizle", AutoSize = true, Anchor = AnchorStyles.Top | AnchorStyles.Right, Location = new Point(330, 2) };
+        clearHistory.LinkClicked += (_, _) => history.Items.Clear();
+        historyHeader.Resize += (_, _) =>
+        {
+            clearHistory.Left = historyHeader.ClientSize.Width - clearHistory.Width;
+            exportHistory.Left = clearHistory.Left - exportHistory.Width - 14;
+        };
+        historyHeader.Controls.Add(exportHistory); historyHeader.Controls.Add(clearHistory);
         historyCard.Controls.Add(historyHeader, 0, 0);
         history.Dock = DockStyle.Fill; history.View = View.Details; history.FullRowSelect = true; history.BorderStyle = BorderStyle.None; history.HeaderStyle = ColumnHeaderStyle.Nonclickable; history.Columns.Add("Saat", 78); var resultColumn = history.Columns.Add("Tanıma sonucu", 280);
         history.SizeChanged += (_, _) => resultColumn.Width = Math.Max(140, history.ClientSize.Width - history.Columns[0].Width - 8);
@@ -244,6 +253,36 @@ public sealed class MainForm : Form
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
         try { File.WriteAllText(dialog.FileName, input.Text); SetStatus("Metin dosyaya kaydedildi.", false); }
         catch (Exception ex) { ShowError("Dosya kaydedilemedi", ex.Message); }
+    }
+
+    private void SaveHistory(object? sender, LinkLabelLinkClickedEventArgs e)
+    {
+        if (history.Items.Count == 0)
+        {
+            ShowError("Geçmiş boş", "Dışa aktarmak için önce en az bir konuşma tanınmalı.");
+            return;
+        }
+
+        using var dialog = new SaveFileDialog
+        {
+            Filter = "Metin dosyası (*.txt)|*.txt|Tüm dosyalar (*.*)|*.*",
+            DefaultExt = "txt",
+            FileName = "konusma-gecmisi.txt"
+        };
+
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+        try
+        {
+            var lines = history.Items.Cast<ListViewItem>().Reverse()
+                .Select(item => $"[{item.Text}] {item.SubItems[1].Text}");
+            File.WriteAllLines(dialog.FileName, lines);
+            SetStatus("Konuşma geçmişi kaydedildi.", false);
+        }
+        catch (Exception ex)
+        {
+            ShowError("Geçmiş kaydedilemedi", ex.Message);
+        }
     }
 
     private void SetStatus(string text, bool error)
