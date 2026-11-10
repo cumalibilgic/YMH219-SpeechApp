@@ -21,7 +21,7 @@ Metni sol alana yazıp **Seslendir** düğmesine basın. Ses listesinden kurulu 
 ## Gereksinimler ve sınırlamalar
 
 - Ses sentezi için Windows'ta en az bir konuşma sesi kurulu olmalıdır.
-- Konuşma tanıma, Windows Speech Recognition tarafından desteklenen kurulu dil paketlerine ve mikrofona bağlıdır. Türkçe tanıma, sistemde Türkçe tanıma motoru kuruluysa kullanılabilir.
+- Konuşma tanıma, Windows Speech Recognition tarafından desteklenen kurulu dil paketlerine ve mikrofona bağlıdır. Uygulama önce Türkçe (`tr-TR`) tanıma motorunu kullanır; sistemde yoksa kurulu ilk motora (örneğin `en-US`) geçer ve durum çubuğunda hangi dilin kullanıldığını gösterir. Hiç tanıma motoru kurulu değilse dinleme başlatılamaz ve hata bildirimi gösterilir.
 - Uygulama yalnızca varsayılan mikrofonu ve kendi penceresine gönderilen ses girişini kullanır.
 
 ## Temel özellikler

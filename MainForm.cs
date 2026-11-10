@@ -20,11 +20,12 @@ public sealed class MainForm : Form
     private readonly Button listenButton = new();
     private readonly Button stopButton = new();
     private bool listening;
+    private string recognizerCulture = "tr-TR";
 
     public MainForm()
     {
         Text = "YMH219 | Speech Studio";
-        MinimumSize = new Size(900, 650);
+        MinimumSize = new Size(1060, 650);
         Size = new Size(1120, 780);
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Color.FromArgb(245, 247, 251);
@@ -55,8 +56,8 @@ public sealed class MainForm : Form
         shell.Controls.Add(header, 0, 0);
 
         var main = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, Margin = new Padding(0) };
-        main.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 58));
-        main.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 42));
+        main.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        main.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
         shell.Controls.Add(main, 0, 1);
 
         var left = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(0, 0, 12, 0) };
@@ -78,11 +79,11 @@ public sealed class MainForm : Form
         speechCard.RowStyles.Add(new RowStyle(SizeType.Absolute, 47));
         speechCard.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         var speechActions = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = false, FlowDirection = FlowDirection.LeftToRight };
-        listenButton.Text = "●  Dinlemeyi Başlat"; StyleButton(listenButton, true); listenButton.Width = 176; listenButton.Click += StartListening;
-        stopButton.Text = "■  Durdur"; StyleButton(stopButton, false); stopButton.Width = 105; stopButton.Enabled = false; stopButton.Click += (_, _) => StopListening("Dinleme durduruldu.");
-        var copyResult = new Button { Text = "Kopyala", Width = 90, Height = 34, FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(67, 87, 115), BackColor = Color.FromArgb(240, 244, 249), Cursor = Cursors.Hand, Margin = new Padding(8, 0, 0, 0) };
+        listenButton.Text = "●  Dinlemeyi Başlat"; StyleButton(listenButton, true); listenButton.Width = 156; listenButton.Click += StartListening;
+        stopButton.Text = "■  Durdur"; StyleButton(stopButton, false); stopButton.Width = 92; stopButton.Enabled = false; stopButton.Click += (_, _) => StopListening("Dinleme durduruldu.");
+        var copyResult = new Button { Text = "Kopyala", Width = 84, Height = 34, FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(67, 87, 115), BackColor = Color.FromArgb(240, 244, 249), Cursor = Cursors.Hand, Margin = new Padding(8, 0, 0, 0) };
         copyResult.FlatAppearance.BorderSize = 0; copyResult.Click += CopyRecognizedText;
-        var clearResult = new Button { Text = "Sonucu sil", Width = 98, Height = 34, FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(103, 116, 135), BackColor = Color.White, Cursor = Cursors.Hand, Margin = new Padding(4, 0, 0, 0) };
+        var clearResult = new Button { Text = "Sonucu sil", Width = 92, Height = 34, FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(103, 116, 135), BackColor = Color.White, Cursor = Cursors.Hand, Margin = new Padding(4, 0, 0, 0) };
         clearResult.FlatAppearance.BorderSize = 0; clearResult.Click += (_, _) => ClearRecognizedText();
         var recognitionTips = new ToolTip();
         recognitionTips.SetToolTip(stopButton, "Kısayol: Esc");
@@ -225,7 +226,10 @@ public sealed class MainForm : Form
         {
             recognizer ??= CreateRecognizer();
             recognizer.RecognizeAsync(RecognizeMode.Multiple);
-            listening = true; listenButton.Enabled = false; stopButton.Enabled = true; SetStatus("Mikrofon dinleniyor…", false);
+            listening = true; listenButton.Enabled = false; stopButton.Enabled = true;
+            SetStatus(recognizerCulture.Equals("tr-TR", StringComparison.OrdinalIgnoreCase)
+                ? "Mikrofon dinleniyor…"
+                : $"Mikrofon dinleniyor… (Türkçe motor yok, {recognizerCulture} kullanılıyor)", false);
         }
         catch (Exception ex) { SetStatus("Mikrofon veya konuşma tanıma hizmeti kullanılamıyor.", true); ShowError("Dinleme başlatılamadı", "Mikrofonu ve Windows konuşma tanıma dil ayarlarını kontrol edin.\n\n" + ex.Message); }
     }
@@ -233,21 +237,19 @@ public sealed class MainForm : Form
     private SpeechRecognitionEngine CreateRecognizer()
     {
         var installedRecognizers = SpeechRecognitionEngine.InstalledRecognizers();
-        var turkishRecognizer = installedRecognizers.FirstOrDefault(r =>
-            string.Equals(r.Culture.Name, "tr-TR", StringComparison.OrdinalIgnoreCase));
+        // Önce Türkçe motor aranır; yoksa kurulu ilk motorla devam edilir.
+        var selectedRecognizer = installedRecognizers.FirstOrDefault(r =>
+            string.Equals(r.Culture.Name, "tr-TR", StringComparison.OrdinalIgnoreCase))
+            ?? installedRecognizers.FirstOrDefault(r => r.Culture.TwoLetterISOLanguageName == "tr")
+            ?? installedRecognizers.FirstOrDefault();
 
-        if (turkishRecognizer is null)
-        {
-            var installedLanguages = installedRecognizers.Count == 0
-                ? "Hiçbir Windows konuşma tanıma motoru bulunamadı."
-                : "Bulunan diller: " + string.Join(", ", installedRecognizers.Select(r => r.Culture.Name)) + ".";
-
+        if (selectedRecognizer is null)
             throw new InvalidOperationException(
-                "Türkçe konuşma tanıma motoru bu bilgisayarda kurulu değil. " + installedLanguages +
-                " Windows Ayarları > Zaman ve Dil > Dil ve Bölge bölümünden Türkçe dil seçeneklerini ve konuşma özelliklerini kontrol edin.");
-        }
+                "Bu bilgisayarda hiçbir Windows konuşma tanıma motoru kurulu değil. " +
+                "Windows Ayarları > Zaman ve Dil > Dil ve Bölge bölümünden konuşma özelliklerini kontrol edin.");
 
-        var engine = new SpeechRecognitionEngine(turkishRecognizer);
+        recognizerCulture = selectedRecognizer.Culture.Name;
+        var engine = new SpeechRecognitionEngine(selectedRecognizer);
         engine.LoadGrammar(new DictationGrammar());
         engine.SetInputToDefaultAudioDevice();
         engine.SpeechRecognized += (_, e) =>
