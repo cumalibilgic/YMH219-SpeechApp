@@ -38,9 +38,15 @@ Metni sol alana yazıp **Seslendir** düğmesine basın. Ses listesinden kurulu 
 
 ## Ekran görüntüleri
 
-Uygulamayı yerel Windows makinesinde başlatıp ana pencerenin ve konuşma tanıma sonucunun ekran görüntülerini bu bölüme ekleyin.
+### Ana ekran
+
+![SpeechApp ana ekranı](screenshots/01-ana-ekran.png)
+
+### Seslendirme
+
+![Metinden sese ekranı](screenshots/02-seslendirme.png)
 
 ## Öğrenci bilgileri
 
-- Ad Soyad: [Adınızı yazın]
-- Öğrenci Numarası: [Numaranızı yazın]
+- Ad Soyad: Cumali Bilgiç
+- Öğrenci Numarası: 250541008
